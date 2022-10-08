@@ -1,0 +1,104 @@
+// color palettes
+// https://colorhunt.co/palette/6f38c587a2fbadddd0eeeeee
+// #6F38C5
+// #87A2FB
+// #ADDDD0
+// #EEEEEE
+// .todo {
+//   padding: 0.5rem;
+// }
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar__title {
+  color: #6f38c5;
+}
+
+
+.todo__add {
+  display: grid;
+  grid-template-columns: auto 42px;
+  column-gap: 5px;
+  margin-top: 1rem;
+}
+
+.todo__add--editing {
+  grid-template-columns: auto 86px;
+}
+
+
+// .todo__add__button {
+//   display: inline-block;
+// }
+
+.todo__list {
+  margin: 0;
+  padding: 0;
+  margin-top: 1rem;
+  list-style: none;
+}
+
+.task {
+  display: grid;  
+  grid-template-columns: 100% 126px;  
+  margin-bottom: 0.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.task:last-child {
+  margin-bottom: 0;
+}
+
+
+.task__text {
+  padding: 0.5rem;
+  background-color: rgb(231, 231, 231);  
+  transition: transform 0.5s; 
+  // white-space: nowrap;
+  // text-overflow: ellipsis;
+  // overflow: hidden;
+}
+
+.task__text--done {
+  text-decoration: line-through;
+}
+
+.task__control {  
+  transition: transform 0.5s;
+}
+
+.task__control > button {
+  border-radius: 0;
+  height: 100%;
+}
+
+// .task--selected .task__text, .task--selected .task__control {
+//   transform: translateX(-126px);
+// }
+
+.task--selected .task__control {
+  transform: translateX(-126px);
+}
+
+
+.todo__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+// .around-checkbox::before {
+//   content: " ";
+//   border-radius: 50%;
+//   padding: 1rem;
+// }
+
+.ml2px{
+  margin-left: 2px;
+}
