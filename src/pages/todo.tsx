@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Button, Form, Row, Col } from 'react-bootstrap';
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import './todo.scss'
 
 import { TodoSchema } from '../datastore/schemas/todo-schema';
@@ -16,7 +17,8 @@ const todoKey = "f3dDs"
 interface ITodo {
     id: string,
     text: string,
-    isDone: boolean
+    isDone: boolean,
+    priority: number
 }
 
 function TodoPage() {
@@ -28,10 +30,11 @@ function TodoPage() {
     const [todoText, setTodoText] = useState("");
     const [todoEditing, setTodoEditing] = useState(-1);
     const todoSchema = new TodoSchema();
-    useEffect(() => {
+    useEffect(() => {        
         todoSchema.findAll().then(list => {
             // console.log("effect: ")
             // console.log(list)
+            list.sort((a,b) => a.priority - b.priority)
             setTodoList(list);
         });
 
@@ -51,7 +54,8 @@ function TodoPage() {
             const newTodo: ITodo = {
                 id: uuidv4(),
                 text: todoText,
-                isDone: false
+                isDone: false,
+                priority: 0
             }
             // call api
             const result = await todoSchema.add(newTodo)
@@ -148,6 +152,36 @@ function TodoPage() {
 
     }
 
+
+    const onDragEnd = async (result: DropResult) => {
+        if (!result.destination) {
+            return;
+        }
+
+        const todos = reorder(
+            todoList,
+            result.source.index,
+            result.destination.index
+        );
+
+        // call api
+        const res = await Promise.all(todos.map(async (todo, index) => {
+            return await todoSchema.update({ id: todo.id }, { priority: index })            
+        }))
+        //console.log(res)
+        
+        // update api
+        setTodoList([...todos]);
+    }
+
+    const reorder = (list: any[], startIndex: number, endIndex: number) => {
+        const result = Array.from(list);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+
+        return result;
+    };
+
     return (
         <div className="todo container">
             <Row>
@@ -178,29 +212,46 @@ function TodoPage() {
                     </div>
 
 
-                    <ul className='todo__list'>
-                        {todoList.map((todo, index) => {
-                            return (
-                                <li className={todo[isSelectedField] ? "task task--selected" : "task"} onClick={_ => onSelectTask(index)} key={getTodoKey(index)}>
-                                    <div className={todo.isDone ? "task__text task__text--done" : "task__text"}>
-                                        {todo.text}
-                                    </div>
-                                    <div className='task__control'>
-                                        <Button variant="success" onClick={() => onDone(index)}>
-                                            <i className="bi bi-check-lg"></i>
-                                        </Button>
-                                        <Button variant="warning" onClick={() => onEdit(index)}>
-                                            <i className="bi bi-pencil"></i>
-                                        </Button>
-                                        <Button variant="danger" onClick={() => onRemove(index)}>
-                                            <i className="bi bi-trash"></i>
-                                        </Button>
-                                    </div>
-                                </li>
-                            )
-                        })}
-
-                    </ul>
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable droppableId="droppable">
+                            {(provided, snapshot) => (
+                                <ul className='todo__list'
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                >
+                                    {todoList.map((todo, index) => {
+                                        return (
+                                            <Draggable key={todo.id} draggableId={todo.id} index={index}>
+                                                {(provided, snapshot) => (
+                                                    <li className={todo[isSelectedField] ? "task task--selected" : "task"} onClick={_ => onSelectTask(index)} key={getTodoKey(index)}
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        >
+                                                        <div className={todo.isDone ? "task__text task__text--done" : "task__text"}>
+                                                            {todo.text}
+                                                        </div>
+                                                        <div className='task__control'>
+                                                            <Button variant="success" onClick={() => onDone(index)}>
+                                                                <i className="bi bi-check-lg"></i>
+                                                            </Button>
+                                                            <Button variant="warning" onClick={() => onEdit(index)}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+                                                            <Button variant="danger" onClick={() => onRemove(index)}>
+                                                                <i className="bi bi-trash"></i>
+                                                            </Button>
+                                                        </div>
+                                                    </li>
+                                                )}
+                                            </Draggable>
+                                        )
+                                    })}
+                                    {provided.placeholder}
+                                </ul>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
 
                     <div className='todo__footer'>
                         <div>{todoList.length > 0 ? `${todoList.filter(todo => todo.isDone).length} of ${todoList.length} are done` : ''}</div>
