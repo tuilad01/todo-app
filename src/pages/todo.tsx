@@ -61,7 +61,7 @@ function TodoPage() {
             const result = await todoSchema.add(newTodo)
             // update ui
             if (result) {
-                setTodoList([...todoList, newTodo])
+                setTodoList([newTodo, ...todoList])
                 setTodoText("")
             }
         }
@@ -107,9 +107,14 @@ function TodoPage() {
 
     const onClearAll = async () => {
         const arrTodoRemoved: any[] = []
+        const resultConfirm = window.confirm("Are you sure?")
+        if(!resultConfirm) return false;
+
+        // find todo items that have done.
+        const doneItems = todoList.filter((todo:ITodo) => todo.isDone)
         // remove one by one in indexedDB if it has been removed successfully then push id to array to update ui
-        for (let index = 0; index < todoList.length; index++) {
-            const todo = todoList[index];
+        for (let index = 0; index < doneItems.length; index++) {
+            const todo = doneItems[index];
             const result = await todoSchema.remove({ id: todo.id })
             if (result) {
                 arrTodoRemoved.push(todo.id)
@@ -256,7 +261,7 @@ function TodoPage() {
                     <div className='todo__footer'>
                         <div>{todoList.length > 0 ? `${todoList.filter(todo => todo.isDone).length} of ${todoList.length} are done` : ''}</div>
                         <Button variant="danger" onClick={() => onClearAll()}>
-                            <i className="bi bi-trash"></i> Clear All
+                            <i className="bi bi-trash"></i> Clear All Done
                         </Button>
                     </div>
                 </Col>
